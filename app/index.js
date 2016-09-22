@@ -1,5 +1,5 @@
 import { Client } from 'irc';
-import { nickname, host, channels } from '../config';
+import { nickname, host, channels, attn } from '../config';
 import { reducer } from './state';
 import { createStore } from 'redux';
 import lookupCommand from './commands';
@@ -15,7 +15,8 @@ bot.addListener('message', (from, to, message) => {
   recieved(from, to, message);
   console.log(message.split(' '));
   const [init, command, ...args] = message.split(' ');
-  if (init === nickname + ':') {
-    lookupCommand(command)(bot, store, to, args);
+  if (init === nickname + ':' || (attn && init === attn)) {
+    lookupCommand(command)(bot, store, to, args)
+      .catch(err => console.error(err));
   }
 });
