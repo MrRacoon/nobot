@@ -7,16 +7,15 @@ import lookupCommand from './commands';
 const bot = new Client(host, nickname, { channels });
 const store = createStore(reducer);
 
-const recieved = (from, to, msg) => {
-  console.log(`MESSAGE < ${to} | ${from}: ${msg}`);
-};
-
 bot.addListener('message', (from, to, message) => {
-  recieved(from, to, message);
-  console.log(message.split(' '));
+  console.log(`MESSAGE < ${to} | ${from}: ${message}`);
   const [init, command, ...args] = message.split(' ');
   if (init === nickname + ':' || (attn && init === attn)) {
     lookupCommand(command)(bot, store, to, args)
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        bot.notice(to, 'ERROR PROCESSING COMMAND');
+      });
+
   }
 });
