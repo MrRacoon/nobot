@@ -1,8 +1,8 @@
 import { Client } from 'irc';
 import { nickname, host, channels } from '../config';
-import { words } from 'lodash/fp';
 import { reducer, actions } from './state';
 import { createStore, bindActionCreators } from 'redux';
+import { hashi, hashd, verify } from './hasher';
 
 const bot = new Client(host, nickname, { channels });
 const store = createStore(reducer);
@@ -26,8 +26,9 @@ const say = (to, msg) => {
 
 bot.addListener('message', (from, to, message) => {
   recieved(from, to, message);
-  const [init, command, ...args] = words(message);
-  if (init === nickname) {
+  console.log(message.split(' '));
+  const [init, command, ...args] = message.split(' ');
+  if (init === nickname + ':') {
     switch (command) {
 
     case 'load':
@@ -44,6 +45,30 @@ bot.addListener('message', (from, to, message) => {
       } else {
         notice(to, 'need to reload');
       }
+      break;
+
+    case 'hash':
+    case 'hashi':
+      hashi(args.join(' '))
+        .then(say.bind(null, to));
+      break;
+
+    case 'hashd':
+      hashd(args.join(' '))
+        .then(say.bind(null, to));
+      break;
+
+    case 'verify':
+      const [pass, hash] = args;
+      verify(pass, hash)
+        .then(match => {
+          if (match) {
+            say(to, 'Correct!')
+          } else {
+            say(to, 'Nope!')
+          }
+        })
+        .catch(err => say(to, err));
       break;
 
     default:
